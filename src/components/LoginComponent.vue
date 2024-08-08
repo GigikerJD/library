@@ -5,40 +5,60 @@
             <input 
                 type="email" 
                 v-model="user.email" 
-                id="email" 
+                id="email"
+                placeholder="Veuillez taper votre adresse email" 
                 required>
 
-            <label for="password">Password:</label>
+            <label for="password">Mot de passe:</label>
             <input 
                 type="password" 
                 v-model="user.password" 
                 id="password" 
+                placeholder="Veuillez saisir votre mot de passe"
                 required>
             
             <button type="submit">Se connecter</button>
+            <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
         </form>
-
-        <span>
-            {{ user.email }} et {{ user.password }}
-        </span>
     </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
+    name: "LoginComponent",
     data() {
         return {
             user: {
                 email: '',
                 password: ''
-            }
+            },
+            errorMsg: ''
         }
     },
     methods: {
-        login() {
-            console.log('Email:', this.user.email);
-            console.log('Password:', this.user.password);
-            // Add your login logic here
+        async login() {
+            try {
+                const response = await axios.post("http://localhost:3001/api/user", {
+                    EMAIL: this.user.email,
+                    PASSWORD: this.user.password
+                });
+
+                if(response.status === 200){
+                    console.log("Bravo, vous êtes connecté...");
+                    // Handle successful login, such as redirecting the user
+                }
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    this.errorMsg = "Votre identifiant ou mot de passe semble incorrect...";
+                } else if (error.response && error.response.status === 404) {
+                    this.errorMsg = "Utilisateur non trouvé...";
+                } else {
+                    this.errorMsg = "Une erreur s'est produite. Veuillez réessayer plus tard.";
+                }
+                console.error("Error fetching user data:", error);  
+            }
         }
     }
 }
@@ -50,7 +70,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 90vh; /* Make sure the container takes the full height of the viewport */
+    height: 90vh; 
 }
 
 form {
@@ -102,5 +122,22 @@ button[type="submit"] {
     background-color: #010101;
     color: #ffffff;
     font-weight: 600;
+}
+
+button[type="submit"]:hover {
+    background-color: #ff5733;
+    color: #000000;
+    filter: none;
+}
+
+button[type="submit"]:active {
+    background-color: #ff5733;
+    transform: scale(0.95);
+}
+
+.error-msg {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
 }
 </style>

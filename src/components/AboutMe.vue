@@ -1,14 +1,16 @@
 <template>
-    <form method="post">
+    <div id="about">
 
-    </form>
+    </div>
 </template>
 
 <script>
 export default {
-    name: "RegisterComponent"
+    name:"AboutMe"
 }
+
 </script>
+
 
 <style scoped>
 
