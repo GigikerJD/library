@@ -1,6 +1,6 @@
 
 
-export const DashBoard = () => {
+export const AdminSettings = () => {
 
     return(
         <>

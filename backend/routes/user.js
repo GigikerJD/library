@@ -30,7 +30,7 @@ router.post(apiRoutes.user, (req, res) => {
         .then(async ([results]) => {
             if(results.length === 0) res.status(404).json({message: "Utilisateur inconnu..."});
             const isPassValid = await bcrypt.compare(password, results[0].password);
-            if(isPassValid) res.status(204).json({message: "Bienvenue"});
+            if(isPassValid) res.status(202).json({message: "Bienvenue", role: results[0].role});
             else res.status(404).json({message: "Mot de passe incorrect !"});
         })
         .catch(() => res.status(500));
@@ -63,23 +63,59 @@ router.put(apiRoutes.user.concat("/:email"), (req, res) => {
         .then(([result]) => {
             if (result.affectedRows === 0) 
                 return res.status(404).json({ message: "Email actuel non trouvé." });
-            res.status(202).json({ message: "Votre email a été modifié..." });
+            res.status(202).json({ message: "Votre email a été modifié" });
         })
         .catch((error) => {
             console.error("Database error:", error); // Logging the error for debugging
-            res.status(500).json({ message: "Requête non traitée..." });
+            res.status(500).json({ message: "Requête non traitée" });
         });
 });
 
+//Changement de prénom
+router.put(apiRoutes.user.concat("/:email/firstname"), (req, res) => {
+    const { firstname } = req.body;
+    const email = req.params.email;
+    const query = "UPDATE utilisateur SET firstname = ? WHERE email = ?";
+    dbConn.promise().query(query, [firstname, email])
+        .then(([results]) => {
+            if(results.affectedRows === 1) res.status(202).json({message: 'Votre prénom a bien été modifiée'});
+        })
+        .catch(() => res.status(500).json({message: "Requête non traitée"}));
+});
+
+//Changement de nom
+router.put(apiRoutes.user.concat("/:email/lastname"), (req, res) => {
+    const {lastname} = req.body;
+    const email = req.params.email;
+    const query = " UPDATE utilisateur SET lastname = ? WHERE email = ?";
+    dbConn.promise().query(query, [lastname, email])
+        .then(([results]) => {
+            if(results.affectedRows === 1) res.status(202).json({message: "Votre nom a bien été modifiée"});
+        })
+        .catch(() => res.status(500).json({message: "Requête non traitée"}));
+});
+
+//Changement de mot de passe    
+router.put(apiRoutes.user.concat("/:email/password"),async (req, res) => {
+    const {password} = req.body;
+    const email = req.params.email;
+    const hashed = await bcrypt.hash(password, 10);
+    const query = "UPDATE utilisateur SET password = ? WHERE email = ?";
+    dbConn.promise().query(query, [hashed, email])
+        .then(([results]) => {
+            if(results.affectedRows === 1) res.status(200).json({message: "Votre mot de passe a été modifiée"});
+        })
+        .catch(() => res.status(500).json({message: "Requête non traitée"}));
+});
+
+//Suppression d'un compte existant
 router.delete(apiRoutes.user.concat("/:email"), (req, res) => {
     const email = req.params.email;
     const query = "DELETE FROM utilisateur WHERE email = ?";
 
     dbConn.promise().query(query, [email])
-        .then(() => {
-            return res.status(204).json({message: "Votre compte a été supprimé avec succès !"});
-        })
-        .catch(() => res.status(500).json({message: "Requête non traitée..."}));
+        .then(() => res.status(204).json({message: "Votre compte a été supprimé avec succès !"}))
+        .catch(() => res.status(500).json({message: "Requête non traitée"}));
 })
 
 
